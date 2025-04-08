@@ -1,46 +1,90 @@
-import { Button, Card, CardContent, FormControl, FormLabel, Stack, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardContent,
+  FormControl,
+  FormLabel,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { FileUploader } from "../Upload/FileUploader";
 import { AdvancedParams } from "./AdvancedParams";
 import { TermsConditions } from "../TermsConditions";
+import FileList from "../File/FileList";
+import Image from "next/image";
 
 const downloadedCount = 1;
 const downloadedAmount = "200KB";
 const expiryDate = "4/11/2025";
 
 export const FileForm = () => {
-
   return (
     <Card sx={{ maxWidth: "768px" }}>
       <CardContent sx={{ flex: "column" }}>
-        <Stack sx={{ padding: "24px" }}>
-
+        <Stack sx={{ padding: "24px", justifyContent: "center", alignItems: "center" }}>
+          <Image
+            src="./logo.svg"
+            alt="logo"
+            width={140}
+            height={30}
+          />
         </Stack>
 
-        <Stack direction="row" sx={{ padding: "24px", borderTop: "1px solid #D5D7DA", borderBottom: "1px solid #D5D7DA" }} gap={2}>
+        <Stack
+          direction="row"
+          sx={{
+            padding: "24px",
+            borderTop: "1px solid #D5D7DA",
+            borderBottom: "1px solid #D5D7DA",
+          }}
+          gap={2}
+          alignItems="stretch"
+        >
           <Stack gap={2} width={"50%"}>
             <Stack>
-              <Typography variant="body1">{downloadedCount} Downloaded File</Typography>
-              <Typography variant="body2">{downloadedAmount} of 50GB</Typography>
+              <Typography variant="body1">
+                {downloadedCount} Downloaded File
+              </Typography>
+              <Typography variant="body2">
+                {downloadedAmount} of 50GB
+              </Typography>
             </Stack>
-            <Stack>
+            <Stack gap={2}>
               <FileUploader />
+              <FileList />
             </Stack>
           </Stack>
 
           <Stack gap={2} width={"50%"}>
             <Stack>
               <Typography variant="body1">Email</Typography>
-              <Typography variant="body2">We will let you know when your files get downloaded</Typography>
+              <Typography variant="body2">
+                We will let you know when your files get downloaded
+              </Typography>
             </Stack>
-            <Stack borderRadius={2} padding={2} sx={{ backgroundColor: "#F6F8FB" }}>
-              <form style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Stack
+              borderRadius={2}
+              padding={2}
+              sx={{ backgroundColor: "#F6F8FB" }}
+              flex={1}
+            >
+              <form
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}
+              >
                 <FormControl fullWidth variant="outlined">
                   <FormLabel>Receiver's email</FormLabel>
-                  <TextField name="receiverEmail" placeholder="e.g., receiver@example.com" />
+                  <TextField
+                    name="receiverEmail"
+                    placeholder="e.g., receiver@example.com"
+                  />
                 </FormControl>
                 <FormControl fullWidth variant="outlined">
                   <FormLabel>Sender's email</FormLabel>
-                  <TextField name="senderEmail" placeholder="e.g., yourmail@example.com" />
+                  <TextField
+                    name="senderEmail"
+                    placeholder="e.g., yourmail@example.com"
+                  />
                 </FormControl>
                 <FormControl fullWidth variant="outlined">
                   <FormLabel>Your message</FormLabel>
@@ -57,8 +101,8 @@ export const FileForm = () => {
                           overflowY: "auto",
                           padding: "10px",
                           boxSizing: "border-box",
-                        }
-                      }
+                        },
+                      },
                     }}
                   />
                 </FormControl>
@@ -70,9 +114,15 @@ export const FileForm = () => {
         </Stack>
 
         <Stack sx={{ padding: "24px" }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Stack>
-              <Typography variant="subtitle1">Expires on {expiryDate}</Typography>
+              <Typography variant="subtitle1">
+                Expires on {expiryDate}
+              </Typography>
               <TermsConditions sx={{ fontSize: "12px" }} />
             </Stack>
 

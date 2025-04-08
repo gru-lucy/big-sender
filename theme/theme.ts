@@ -104,16 +104,16 @@ const theme = createTheme({
         },
         input: {
           "&::placeholder": {
-            opacity: 0.7
-          }
-        }
-      }
+            opacity: 0.7,
+          },
+        },
+      },
     },
     MuiOutlinedInput: {
       styleOverrides: {
         input: {
           padding: 0,
-          height: 20
+          height: 20,
         },
         root: {
           padding: "11px 11px",
@@ -125,34 +125,34 @@ const theme = createTheme({
           variants: [
             {
               props: {
-                size: "small"
+                size: "small",
               },
               style: {
-                padding: "7px 11px"
-              }
+                padding: "7px 11px",
+              },
             },
             {
               props: {
-                size: "medium"
+                size: "medium",
               },
               style: {
-                padding: "11px 11px"
-              }
+                padding: "11px 11px",
+              },
             },
             {
               props: {
-                size: "large"
+                size: "large",
               },
               style: {
-                padding: "14px 11px"
-              }
-            }
-          ]
+                padding: "14px 11px",
+              },
+            },
+          ],
         },
         notchedOutline: {
-          border: "none"
-        }
-      }
+          border: "none",
+        },
+      },
     },
     MuiButton: {
       styleOverrides: {
@@ -240,7 +240,7 @@ const theme = createTheme({
           padding: "0px",
           backgroundColor: "#FFFFFF",
         },
-      }
+      },
     },
     MuiCardContent: {
       styleOverrides: {
@@ -251,7 +251,19 @@ const theme = createTheme({
           },
         },
       },
-    }
+    },
+    MuiLinearProgress: {
+      styleOverrides: {
+        root: {
+          borderRadius: "8px",
+          backgroundColor: "#E9EAEB",
+        },
+        bar1: {
+          backgroundColor: "#107AE6",
+          borderRadius: "8px",
+        },
+      },
+    },
   },
 });
 

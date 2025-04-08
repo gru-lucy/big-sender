@@ -27,8 +27,7 @@ export function FileProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<File[]>([]);
 
   return (
-    <FileContext.Provider value={{ files, setFiles }
-    }>
+    <FileContext.Provider value={{ files, setFiles }}>
       {children}
     </FileContext.Provider>
   );

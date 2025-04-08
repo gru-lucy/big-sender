@@ -7,10 +7,14 @@ export const AdvancedParams = () => {
 
   return (
     <>
-      <Stack direction="row" alignItems="center" gap={1} sx={{ cursor: "pointer" }} onClick={() => setExpanded(!expanded)}>
-        <Typography variant="caption">
-          Advanced Params
-        </Typography>
+      <Stack
+        direction="row"
+        alignItems="center"
+        gap={1}
+        sx={{ cursor: "pointer" }}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <Typography variant="caption">Advanced Params</Typography>
         <Image
           src="./arrowDown.svg"
           alt="arrowDown"
@@ -22,8 +26,7 @@ export const AdvancedParams = () => {
           }}
         />
       </Stack>
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-      </Collapse>
+      <Collapse in={expanded} timeout="auto" unmountOnExit></Collapse>
     </>
   );
 };

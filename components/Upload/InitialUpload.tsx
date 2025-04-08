@@ -1,6 +1,7 @@
 import { Stack } from "@mui/material";
 import { FileUploader } from "./FileUploader";
 import { TermsConditions } from "../TermsConditions";
+import Image from "next/image";
 
 export const InitialUpload = () => {
   return (
@@ -12,6 +13,14 @@ export const InitialUpload = () => {
       alignItems="center"
       gap={2}
     >
+      <Stack sx={{ padding: "24px", justifyContent: "center", alignItems: "center" }}>
+        <Image
+          src="./logo.svg"
+          alt="logo"
+          width={140}
+          height={30}
+        />
+      </Stack>
       <FileUploader />
       <TermsConditions />
     </Stack>
