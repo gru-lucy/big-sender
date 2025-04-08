@@ -48,12 +48,15 @@ const theme = createTheme({
               props: { variant: "caption" },
               style: {
                 color: "#107AE6",
+                fontWeight: 500,
               },
             },
             {
               props: { variant: "subtitle1" },
               style: {
                 color: "#D92D20",
+                lineHeight: "22px",
+                fontWeight: 600,
               },
             },
             {
@@ -74,8 +77,10 @@ const theme = createTheme({
         root: {
           display: "inline-block",
           marginBottom: 8,
-          color: "#1F2937",
-          "&.Mui-required::after": {
+          fontSize: "14px",
+          fontWeight: 600,
+          color: "#242634",
+          "&::after": {
             content: "''",
             borderRadius: "2px",
             position: "absolute",
@@ -90,6 +95,64 @@ const theme = createTheme({
           display: "none",
         },
       },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          border: "none",
+          fontSize: "14px",
+        },
+        input: {
+          "&::placeholder": {
+            opacity: 0.7
+          }
+        }
+      }
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        input: {
+          padding: 0,
+          height: 20
+        },
+        root: {
+          padding: "11px 11px",
+          border: "1px solid",
+          backgroundColor: "#FFFFFF",
+          borderColor: "#E5E7EB",
+          borderRadius: "8px",
+          transition: "border 120ms ease-in",
+          variants: [
+            {
+              props: {
+                size: "small"
+              },
+              style: {
+                padding: "7px 11px"
+              }
+            },
+            {
+              props: {
+                size: "medium"
+              },
+              style: {
+                padding: "11px 11px"
+              }
+            },
+            {
+              props: {
+                size: "large"
+              },
+              style: {
+                padding: "14px 11px"
+              }
+            }
+          ]
+        },
+        notchedOutline: {
+          border: "none"
+        }
+      }
     },
     MuiButton: {
       styleOverrides: {
@@ -126,11 +189,10 @@ const theme = createTheme({
               props: { variant: "outlined" },
               style: {
                 backgroundColor: "#FFFFFF",
-                borderColor: "#7530FE",
-                color: "#7530FE",
+                borderColor: "#E9EAEB",
+                color: "#242634",
                 "&:hover": {
-                  borderColor: "#9159FE",
-                  color: "#7530FE",
+                  borderColor: "#E9EAEB",
                 },
                 "&.Mui-disabled": {
                   color: "#AC83FE",
@@ -170,6 +232,26 @@ const theme = createTheme({
         },
       },
     },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: "12px",
+          boxShadow: "none",
+          padding: "0px",
+          backgroundColor: "#FFFFFF",
+        },
+      }
+    },
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: "0px",
+          "&:last-child": {
+            paddingBottom: "0px",
+          },
+        },
+      },
+    }
   },
 });
 

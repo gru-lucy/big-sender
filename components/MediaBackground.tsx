@@ -14,7 +14,7 @@ type PexelsResponse = {
 };
 
 const PEXELS_API_KEY = process.env.NEXT_PUBLIC_PEXELS_API_KEY!;
-const PEXELS_IMAGE_API = "https://api.pexels.com/v1/curated?per_page=20";
+const PEXELS_IMAGE_API = "https://api.pexels.com/v1/search?query=nature&orientation=landscape&per_page=20";
 
 export function MediaBackground({
   children,
@@ -54,7 +54,7 @@ export function MediaBackground({
         fetchRandomMedia();
         setFade(false);
       }, 1000);
-    }, 30000);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 

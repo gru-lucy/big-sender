@@ -1,8 +1,25 @@
-import React from "react";
-import { Box, Button, Typography } from "@mui/material";
+"use client";
+
+import React, { useRef } from "react";
 import Image from "next/image";
+import { Box, Button, Typography } from "@mui/material";
+import { useFileContext } from "@/context/FileContext";
 
 export function FileUploader() {
+  const { files, setFiles } = useFileContext();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const selectedFiles = Array.from(e.target.files);
+    setFiles((prev) => [...prev, ...selectedFiles]);
+  };
+
+  const handleBrowseFiles = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <Box
       sx={{
@@ -32,10 +49,18 @@ export function FileUploader() {
         Support JPG, PNG, SVG, and zip files, available for 7 days, up to 50GB
       </Typography>
       <Box mt={4}>
-        <Button variant="contained" color="primary">
+        <Button variant="contained" color="primary" onClick={handleBrowseFiles}>
           Browse File
         </Button>
       </Box>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
     </Box>
   );
 }
