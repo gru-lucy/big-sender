@@ -81,6 +81,7 @@ export const FileForm = () => {
                 padding={2}
                 sx={{ backgroundColor: "#F6F8FB" }}
                 flex={1}
+                gap={2}
               >
                 <FormControl fullWidth variant="outlined">
                   <FormLabel>Receiver's email</FormLabel>
