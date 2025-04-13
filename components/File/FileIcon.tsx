@@ -3,13 +3,9 @@ import {
   Typography,
   Box,
   Paper,
-  Link,
-  IconButton,
-  Tooltip,
   LinearProgress,
   Stack,
 } from "@mui/material";
-import FileCheckIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import { fileTypeColor } from "./fileTypeColors";
 import mime from "mime";
@@ -24,7 +20,7 @@ interface FileProps {
 }
 
 interface FileDisplayItemProps {
-  file: FileProps;
+  file: FileProps;   
   onRemove?: (id: string) => void;
 }
 
@@ -38,6 +34,8 @@ export const FileDisplayItem: React.FC<FileDisplayItemProps> = ({
   const fileColor = fileExtension
     ? fileTypeColor[fileExtension] || "primary.main"
     : "primary.main";
+
+  const finalExtension = fileExtension === "" ? file.name.split(".").pop() : fileExtension;
 
   function formatBytes(bytes: number, decimals = 2) {
     if (bytes === 0) return "0 Bytes";
@@ -104,7 +102,7 @@ export const FileDisplayItem: React.FC<FileDisplayItemProps> = ({
                 textAlign: "center",
               }}
             >
-              {fileExtension?.toUpperCase()}
+              {finalExtension?.toUpperCase()}
             </Typography>
           </Box>
         </Stack>
