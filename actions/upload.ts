@@ -9,73 +9,122 @@ const r2Client = new S3Client({
   region: 'auto',
   endpoint: `https://${process.env.NEXT_PUBLIC_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: process.env.NEXT_PUBLIC_R2_ACCESS_KEY_ID!,       // from .env
-    secretAccessKey: process.env.NEXT_PUBLIC_R2_SECRET_ACCESS_KEY!, // from .env
+    accessKeyId: process.env.NEXT_PUBLIC_R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.NEXT_PUBLIC_R2_SECRET_ACCESS_KEY!
   },
-  forcePathStyle: true  // ensure path-style URLs (needed for R2 compatibility)
+  forcePathStyle: true  // required for R2 compatibility
 });
 
-// 1. Server Action: Generate a presigned URL for uploading a file
-export async function generatePresignedUrl(fileName: string, fileType: string, fileSize: number) {
-  // Sanitize and prepare a unique object key for the file in R2
-  const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');  // replace any unsafe characters
-  const timestamp = Date.now();
-  const objectKey = `uploads/${timestamp}_${safeName}`;
+/**
+ * Uploads multiple files using S3.send.
+ * The client passes in an array of File objects.
+ */
+export async function uploadFiles(files: File[]): Promise<Array<{ fileName: string; fileSize: number; objectKey: string }>> {
+  const uploadedFiles: Array<{ fileName: string; fileSize: number; objectKey: string }> = [];
 
-  // Create a command to put an object with specified content type (and size for security)
-  const putCommand = new PutObjectCommand({
-    Bucket: process.env.NEXT_PUBLIC_R2_BUCKET_NAME,
-    Key: objectKey,
-    ContentType: fileType,
-    ContentLength: fileSize       // ensure the signed URL is only valid for this size&#8203;:contentReference[oaicite:8]{index=8}
-    // You can add other metadata or ACL here if needed (e.g., ACL: 'public-read' to make public&#8203;:contentReference[oaicite:9]{index=9})
-  });
-  // Generate a presigned PUT URL valid for e.g. 1 hour (3600 seconds)
-  const uploadUrl = await getSignedUrl(r2Client, putCommand, { expiresIn: 3600 });
-  return { uploadUrl, objectKey };  // return the URL and object key to the client
+  for (const file of files) {
+    // Sanitize file name and create a unique key
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const timestamp = Date.now();
+    const objectKey = `uploads/${timestamp}_${safeName}`;
+
+    // Read the file into a Buffer (using the File API available in modern Next.js server actions)
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Create the PutObjectCommand for uploading
+    const putCommand = new PutObjectCommand({
+      Bucket: process.env.NEXT_PUBLIC_R2_BUCKET_NAME,
+      Key: objectKey,
+      Body: buffer,
+      ContentType: file.type,
+      ContentLength: file.size
+    });
+    // Upload the file using S3.send
+    await r2Client.send(putCommand);
+
+    // Save metadata for later use (e.g. for generating download links)
+    uploadedFiles.push({
+      fileName: file.name,
+      fileSize: file.size,
+      objectKey
+    });
+  }
+  return uploadedFiles;
 }
 
-// 2. Server Action: Send an email with a download link using Resend API
+/**
+ * Generates presigned download URLs for an array of files and sends an email with these links.
+ */
 export async function sendDownloadEmail({
   senderEmail,
   receiverEmail,
   message,
-  fileName,
-  fileSize,
-  objectKey
+  files
 }: {
   senderEmail?: string;
   receiverEmail: string;
   message?: string;
-  fileName: string;
-  fileSize: number;
-  objectKey: string;
+  files: Array<{ fileName: string; fileSize: number; objectKey: string }>;
 }) {
-  // Generate a presigned GET URL for downloading the file (valid for 24 hours)
-  const getCommand = new GetObjectCommand({
-    Bucket: process.env.R2_BUCKET_NAME,
-    Key: objectKey
+  // Generate a presigned download URL for each file (valid for 24 hours)
+  const downloadLinksPromises = files.map(async (file) => {
+    const getCommand = new GetObjectCommand({
+      Bucket: process.env.NEXT_PUBLIC_R2_BUCKET_NAME,
+      Key: file.objectKey
+    });
+    const downloadUrl = await getSignedUrl(r2Client, getCommand, { expiresIn: 24 * 3600 });
+    const fileSizeKB = (file.fileSize / 1024).toFixed(2);
+    return `<li>${file.fileName} (${fileSizeKB} KB): <a href="${downloadUrl}">Download</a></li>`;
   });
-  const downloadUrl = await getSignedUrl(r2Client, getCommand, { expiresIn: 24 * 3600 });
 
-  // Initialize Resend client with our API key
-  const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
+  const downloadLinksList = await Promise.all(downloadLinksPromises);
 
-  // Compose the email content (include file metadata and download link)
-  const subject = 'Your file is ready for download';
-  const fileSizeKB = (fileSize / 1024).toFixed(2);
+  // Build the email HTML content
   const htmlContent = `
-    <p>Hello,</p>
-    <p>Your file <strong>${fileName}</strong> (size: ${fileSizeKB} KB) has been uploaded successfully.</p>
-    <p>You can download it using this link: <a href="${downloadUrl}">Download ${fileName}</a></p>
-    <p>This link will expire in 24 hours for security.</p>
+    <div style="background-color: #1c1c1c; color: #f0f0f0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">
+      <h1 style="color: #ffffff; font-size: 28px; margin-bottom: 20px; border-bottom: 2px solid #444; padding-bottom: 10px;">Hi,</h1>
+      <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
+        We are delighted to inform you that a new file has been sent your way.
+      </p>
+      ${senderEmail ? `
+        <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
+          <strong>${senderEmail}</strong> sent you a file. Please use the link below to securely download it:
+        </p>
+      ` : ''}
+      <ul style="list-style-type: none; padding: 0; margin: 20px 0;">
+        ${downloadLinksList.join('')}
+      </ul>
+      ${message ? `
+        <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
+          Message from sender: ${message}
+        </p>
+      ` : ''}
+      <p style="font-size: 14px; line-height: 1.6; color: #bbb; margin: 20px 0;">
+        Please note: The download link(s) provided above are only valid for 24 hours from the time of sending. After this period, the links will expire and the file(s) will become inaccessible.
+      </p>
+      <p style="font-size: 14px; line-height: 1.6; color: #aaa; margin: 20px 0;">
+        If you experience any issues or need further assistance with the download process, feel free to contact our support team anytime at <a href="mailto:support@example.com" style="color: #4aa8d8; text-decoration: none;">support@example.com</a>.
+      </p>
+      <p style="font-size: 14px; line-height: 1.6; color: #bbb; margin-top: 30px;">
+        Thank you for choosing our service. We are committed to providing you with a smooth and secure experience at every step.
+      </p>
+      <div style="border-top: 1px solid #444; margin-top: 30px; padding-top: 10px; font-size: 12px; color: #777;">
+        <p style="margin: 0;">Best regards,</p>
+        <p style="margin: 0;">Giga Send Team</p>
+      </div>
+    </div>
   `;
 
-  // Send the email via Resend
+
+  // Initialize Resend client
+  const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
+
+  // Send the email with the download links
   await resend.emails.send({
-    from: senderEmail ?? "BigSender",       // e.g., "YourApp <no-reply@yourdomain.com>"
-    to: [receiverEmail],                              // recipient's email
-    subject: subject,
+    from: "GigaSend <no-reply@transfer.gigasend.us>",
+    to: [receiverEmail],
+    subject: 'Your Files Are Ready for Download',
     html: htmlContent
   });
 }

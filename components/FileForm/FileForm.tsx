@@ -19,7 +19,7 @@ import { UploadFormSchema } from "./schema/uploadSchema";
 import { z } from "zod";
 import { useFileContext } from "@/context/FileContext";
 import { useEffect } from "react";
-import { generatePresignedUrl, sendDownloadEmail } from "@/actions/upload";
+import { sendDownloadEmail, uploadFiles } from "@/actions/upload";
 
 const downloadedCount = 1;
 const downloadedAmount = "200KB";
@@ -40,33 +40,21 @@ export const FileForm = () => {
 
   const onSubmit = async (data: UploadFormData) => {
     try {
-      // Get the file from the FileList (the file input isn't in our Zod schema directly)
-      const fileList = data.files;
-      if (!fileList || fileList.length === 0) {
-        throw new Error("Please select a file to upload.");
+      // Make sure at least one file was selected
+      if (!data.files || data.files.length === 0) {
+        throw new Error("Please select file(s) to upload.");
       }
-      const file = fileList[0];
-      // 1. Request a presigned upload URL from the server action
-      const { uploadUrl, objectKey } = await generatePresignedUrl(file.name, file.type, file.size);
-      // 2. Upload the file directly to Cloudflare R2 using the URL
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type  // must match the ContentType used in presign&#8203;:contentReference[oaicite:14]{index=14}
-        }
-      });
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
-      }
-      // 3. On successful upload, send the download email via server action
+
+      // Convert FileList to an array of File objects
+      const filesArray = Array.from(data.files);
+      // Upload the files on the server using S3.send
+      const uploadedFiles = await uploadFiles(filesArray);
+      // Send an email containing presigned download links for each file
       await sendDownloadEmail({
         senderEmail: data.senderEmail,
         receiverEmail: data.receiverEmail,
         message: data.message,
-        fileName: file.name,
-        fileSize: file.size,
-        objectKey: objectKey
+        files: uploadedFiles
       });
     } catch (err: any) {
       console.error("Error during upload:", err);
