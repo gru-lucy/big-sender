@@ -7,10 +7,10 @@ import { Resend } from 'resend';
 // Initialize the S3 client for Cloudflare R2
 const r2Client = new S3Client({
   region: 'auto',
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  endpoint: `https://${process.env.NEXT_PUBLIC_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,       // from .env
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!, // from .env
+    accessKeyId: process.env.NEXT_PUBLIC_R2_ACCESS_KEY_ID!,       // from .env
+    secretAccessKey: process.env.NEXT_PUBLIC_R2_SECRET_ACCESS_KEY!, // from .env
   },
   forcePathStyle: true  // ensure path-style URLs (needed for R2 compatibility)
 });
@@ -24,7 +24,7 @@ export async function generatePresignedUrl(fileName: string, fileType: string, f
 
   // Create a command to put an object with specified content type (and size for security)
   const putCommand = new PutObjectCommand({
-    Bucket: process.env.R2_BUCKET_NAME,
+    Bucket: process.env.NEXT_PUBLIC_R2_BUCKET_NAME,
     Key: objectKey,
     ContentType: fileType,
     ContentLength: fileSize       // ensure the signed URL is only valid for this size&#8203;:contentReference[oaicite:8]{index=8}
@@ -36,7 +36,21 @@ export async function generatePresignedUrl(fileName: string, fileType: string, f
 }
 
 // 2. Server Action: Send an email with a download link using Resend API
-export async function sendDownloadEmail(userEmail: string, fileName: string, fileSize: number, objectKey: string) {
+export async function sendDownloadEmail({
+  senderEmail,
+  receiverEmail,
+  message,
+  fileName,
+  fileSize,
+  objectKey
+}: {
+  senderEmail?: string;
+  receiverEmail: string;
+  message?: string;
+  fileName: string;
+  fileSize: number;
+  objectKey: string;
+}) {
   // Generate a presigned GET URL for downloading the file (valid for 24 hours)
   const getCommand = new GetObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME,
@@ -45,7 +59,7 @@ export async function sendDownloadEmail(userEmail: string, fileName: string, fil
   const downloadUrl = await getSignedUrl(r2Client, getCommand, { expiresIn: 24 * 3600 });
 
   // Initialize Resend client with our API key
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY);
 
   // Compose the email content (include file metadata and download link)
   const subject = 'Your file is ready for download';
@@ -59,8 +73,8 @@ export async function sendDownloadEmail(userEmail: string, fileName: string, fil
 
   // Send the email via Resend
   await resend.emails.send({
-    from: process.env.RESEND_FROM_ADDRESS!,       // e.g., "YourApp <no-reply@yourdomain.com>"
-    to: [userEmail],                              // recipient's email
+    from: senderEmail ?? "BigSender",       // e.g., "YourApp <no-reply@yourdomain.com>"
+    to: [receiverEmail],                              // recipient's email
     subject: subject,
     html: htmlContent
   });
