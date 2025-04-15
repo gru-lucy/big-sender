@@ -1,9 +1,17 @@
 import { InitialUpload } from "@/components/Upload/InitialUpload";
-import { FileForm } from "@/components/FileForm/FileForm";
 import { useFileContext } from "@/context/FileContext";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export const Screen = () => {
   const { files } = useFileContext();
+  const router = useRouter();
 
-  return files.length === 0 ? <InitialUpload /> : <FileForm />;
-}
+  useEffect(() => {
+    if (files.length) {
+      router.push("/transfer");
+    }
+  }, [files]);
+
+  return <InitialUpload />;
+};

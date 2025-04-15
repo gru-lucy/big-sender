@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Button,
   Card,
@@ -18,8 +20,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UploadFormSchema } from "./schema/uploadSchema";
 import { z } from "zod";
 import { useFileContext } from "@/context/FileContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { sendDownloadEmail, uploadFiles } from "@/actions/upload";
+import { useRouter } from "next/navigation";
 
 const downloadedCount = 1;
 const downloadedAmount = "200KB";
@@ -28,10 +31,20 @@ const expiryDate = "4/11/2025";
 type UploadFormData = z.infer<typeof UploadFormSchema>;
 
 export const FileForm = () => {
-  const { files } = useFileContext();
+  const { files, setFiles } = useFileContext();
+  const [uploadProgress, setUploadProgress] = useState<{
+    [key: string]: number;
+  }>({});
+  const router = useRouter();
 
-  const { register, handleSubmit, getValues, setValue, formState: { errors, isSubmitting } } = useForm<UploadFormData>({
-    resolver: zodResolver(UploadFormSchema)
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<UploadFormData>({
+    resolver: zodResolver(UploadFormSchema),
   });
 
   useEffect(() => {
@@ -54,8 +67,11 @@ export const FileForm = () => {
         senderEmail: data.senderEmail,
         receiverEmail: data.receiverEmail,
         message: data.message,
-        files: uploadedFiles
+        files: uploadedFiles,
       });
+
+      setFiles([]);
+      router.push("/success");
     } catch (err: any) {
       console.error("Error during upload:", err);
     }
@@ -68,13 +84,14 @@ export const FileForm = () => {
         style={{ display: "flex", flexDirection: "column", gap: 16 }}
       >
         <CardContent sx={{ flex: "column" }}>
-          <Stack sx={{ padding: "24px", justifyContent: "center", alignItems: "center" }}>
-            <Image
-              src="./logo.svg"
-              alt="logo"
-              width={140}
-              height={30}
-            />
+          <Stack
+            sx={{
+              padding: "24px",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Image src="./logo.svg" alt="logo" width={140} height={30} />
           </Stack>
 
           <Stack
@@ -98,7 +115,7 @@ export const FileForm = () => {
               </Stack>
               <Stack gap={2}>
                 <FileUploader />
-                <FileList />
+                <FileList uploadProgress={uploadProgress} />
               </Stack>
             </Stack>
 
@@ -123,7 +140,9 @@ export const FileForm = () => {
                     placeholder="e.g., receiver@example.com"
                     {...register("receiverEmail")}
                     error={!!errors.receiverEmail}
-                    helperText={errors.receiverEmail ? errors.receiverEmail.message : ""}
+                    helperText={
+                      errors.receiverEmail ? errors.receiverEmail.message : ""
+                    }
                   />
                 </FormControl>
                 <FormControl fullWidth variant="outlined">
@@ -132,7 +151,9 @@ export const FileForm = () => {
                     placeholder="e.g., yourmail@example.com"
                     {...register("senderEmail")}
                     error={!!errors.senderEmail}
-                    helperText={errors.senderEmail ? errors.senderEmail.message : ""}
+                    helperText={
+                      errors.senderEmail ? errors.senderEmail.message : ""
+                    }
                   />
                 </FormControl>
                 <FormControl fullWidth variant="outlined">
@@ -175,7 +196,9 @@ export const FileForm = () => {
               </Stack>
 
               <Stack direction="row" gap={2}>
-                <Button variant="outlined" type="button">Cancel</Button>
+                <Button variant="outlined" type="button">
+                  Cancel
+                </Button>
                 <Button variant="contained" color="primary" type="submit">
                   Transfer
                 </Button>
