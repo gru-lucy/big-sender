@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ClientThemeRegistry from "./ThemeRegistryDynamic";
+import { FileProvider } from "@/context/FileContext";
+import { MediaBackground } from "@/components/MediaBackground";
 
 const interSans = Inter({
   variable: "--font-inter-sans",
@@ -22,7 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${interSans.variable}`}>
-        <ClientThemeRegistry>{children}</ClientThemeRegistry>
+        <ClientThemeRegistry>
+          <MediaBackground>
+            <FileProvider>{children}</FileProvider>
+          </MediaBackground>
+        </ClientThemeRegistry>
       </body>
     </html>
   );

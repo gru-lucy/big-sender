@@ -13,13 +13,10 @@ export const InitialUpload = () => {
       alignItems="center"
       gap={2}
     >
-      <Stack sx={{ padding: "24px", justifyContent: "center", alignItems: "center" }}>
-        <Image
-          src="./logo.svg"
-          alt="logo"
-          width={140}
-          height={30}
-        />
+      <Stack
+        sx={{ padding: "24px", justifyContent: "center", alignItems: "center" }}
+      >
+        <Image src="./logo.svg" alt="logo" width={140} height={30} />
       </Stack>
       <FileUploader />
       <TermsConditions />

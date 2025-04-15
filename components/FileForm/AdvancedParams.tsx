@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Collapse, Stack, Typography } from "@mui/material";
 import Image from "next/image";

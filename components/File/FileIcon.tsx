@@ -1,50 +1,42 @@
 import React from "react";
-import {
-  Typography,
-  Box,
-  Paper,
-  LinearProgress,
-  Stack,
-} from "@mui/material";
+import { Typography, Box, Paper, LinearProgress, Stack } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { fileTypeColor } from "./fileTypeColors";
 import mime from "mime";
 import Image from "next/image";
 
 interface FileProps {
-  // id: string;
   name: string;
   size: number;
   type: string;
-  // url: string;
 }
 
 interface FileDisplayItemProps {
-  file: FileProps;   
+  file: FileProps;
+  progress: number; // <-- new prop for dynamic progress
   onRemove?: (id: string) => void;
 }
 
-const progress = 80;
+function formatBytes(bytes: number, decimals = 2) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
 
 export const FileDisplayItem: React.FC<FileDisplayItemProps> = ({
   file,
+  progress,
   onRemove,
 }) => {
   const fileExtension = mime.getExtension(file.type);
   const fileColor = fileExtension
     ? fileTypeColor[fileExtension] || "primary.main"
     : "primary.main";
-
-  const finalExtension = fileExtension === "" ? file.name.split(".").pop() : fileExtension;
-
-  function formatBytes(bytes: number, decimals = 2) {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ["Bytes", "KB", "MB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-  }
+  const finalExtension =
+    fileExtension === "" ? file.name.split(".").pop() : fileExtension;
 
   return (
     <Paper
@@ -128,7 +120,7 @@ export const FileDisplayItem: React.FC<FileDisplayItemProps> = ({
             <LinearProgress
               variant="determinate"
               value={progress}
-              sx={{ width: `${progress}%`, height: 8 }}
+              sx={{ width: "100%", height: 8 }}
             />
             <Typography
               variant="body1"
