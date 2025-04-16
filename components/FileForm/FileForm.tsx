@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   FormControl,
   FormLabel,
   Stack,
@@ -20,27 +21,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UploadFormSchema } from "./schema/uploadSchema";
 import { z } from "zod";
 import { useFileContext } from "@/context/FileContext";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { sendDownloadEmail, uploadFiles } from "@/actions/upload";
 import { useRouter } from "next/navigation";
 
 const downloadedCount = 1;
 const downloadedAmount = "200KB";
-const expiryDate = "4/11/2025";
+const expiryDate = "4/20/2025";
 
 type UploadFormData = z.infer<typeof UploadFormSchema>;
 
 export const FileForm = () => {
   const { files, setFiles } = useFileContext();
-  const [uploadProgress, setUploadProgress] = useState<{
-    [key: string]: number;
-  }>({});
   const router = useRouter();
 
   const {
     register,
     handleSubmit,
-    getValues,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<UploadFormData>({
@@ -60,6 +57,7 @@ export const FileForm = () => {
 
       // Convert FileList to an array of File objects
       const filesArray = Array.from(data.files);
+
       // Upload the files on the server using S3.send
       const uploadedFiles = await uploadFiles(filesArray);
       // Send an email containing presigned download links for each file
@@ -69,11 +67,11 @@ export const FileForm = () => {
         message: data.message,
         files: uploadedFiles,
       });
-
-      setFiles([]);
       router.push("/success");
     } catch (err: any) {
       console.error("Error during upload:", err);
+    } finally {
+      setFiles([]);
     }
   };
 
@@ -115,7 +113,7 @@ export const FileForm = () => {
               </Stack>
               <Stack gap={2}>
                 <FileUploader />
-                <FileList uploadProgress={uploadProgress} />
+                <FileList />
               </Stack>
             </Stack>
 
@@ -199,7 +197,12 @@ export const FileForm = () => {
                 <Button variant="outlined" type="button">
                   Cancel
                 </Button>
-                <Button variant="contained" color="primary" type="submit">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
                   Transfer
                 </Button>
               </Stack>
@@ -207,6 +210,25 @@ export const FileForm = () => {
           </Stack>
         </CardContent>
       </form>
+
+      {isSubmitting && (
+        <Stack
+          gap={2}
+          justifyContent="center"
+          alignItems="center"
+          position="fixed"
+          width="100vw"
+          top={0}
+          left={0}
+          height="100vh"
+          sx={{ backgroundColor: "rgba(0, 0, 0, 0.8)", zIndex: 9999 }}
+        >
+          <CircularProgress />
+          <Typography variant="body1" color="gray">
+            Please wait while we are processing your files.
+          </Typography>
+        </Stack>
+      )}
     </Card>
   );
 };

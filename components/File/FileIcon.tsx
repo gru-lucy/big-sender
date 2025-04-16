@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography, Box, Paper, LinearProgress, Stack } from "@mui/material";
+import { Typography, Box, Paper, LinearProgress, Stack, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { fileTypeColor } from "./fileTypeColors";
 import mime from "mime";
@@ -13,8 +13,7 @@ interface FileProps {
 
 interface FileDisplayItemProps {
   file: FileProps;
-  progress: number; // <-- new prop for dynamic progress
-  onRemove?: (id: string) => void;
+  onRemove: (id: string) => void;
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -28,7 +27,6 @@ function formatBytes(bytes: number, decimals = 2) {
 
 export const FileDisplayItem: React.FC<FileDisplayItemProps> = ({
   file,
-  progress,
   onRemove,
 }) => {
   const fileExtension = mime.getExtension(file.type);
@@ -101,35 +99,19 @@ export const FileDisplayItem: React.FC<FileDisplayItemProps> = ({
         <Stack flex={1}>
           <Stack direction="row" justifyContent="space-between">
             <Stack>
-              <Typography variant="body1" fontWeight={600}>
+              <Typography variant="body1" sx={{ wordBreak: "break-all" }} fontWeight={600}>
                 {file.name}
               </Typography>
               <Typography variant="body2">
                 <span>{formatBytes(file.size)}</span>
               </Typography>
             </Stack>
-            <CloseIcon sx={{ width: 17, height: 17, color: "#6D6D6D" }} />
-          </Stack>
-          <Stack
-            direction="row"
-            gap={2}
-            alignItems="center"
-            justifyContent="space-between"
-            mt={1}
-          >
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{ width: "100%", height: 8 }}
-            />
-            <Typography
-              variant="body1"
-              fontWeight={600}
-              width={39}
-              textAlign="right"
+            <IconButton
+              onClick={() => onRemove(file.name)}
+              sx={{ width: 25, height: 25 }}
             >
-              {progress}%
-            </Typography>
+              <CloseIcon sx={{ width: 17, height: 17, color: "#6D6D6D" }} />
+            </IconButton>
           </Stack>
         </Stack>
       </Stack>
