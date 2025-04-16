@@ -6,7 +6,7 @@ import { Box, Button, Typography } from "@mui/material";
 import { useFileContext } from "@/context/FileContext";
 
 export function FileUploader() {
-  const { files, setFiles } = useFileContext();
+  const { setFiles } = useFileContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -7,8 +7,8 @@ export const FileList = () => {
   const { files, setFiles } = useFileContext();
 
   const handleRemoveFile = (id: string) => {
-    console.log(id, "id")
-    setFiles(prevFiles => prevFiles.filter(file => file.name !== id));
+    console.log(id, "id");
+    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== id));
   };
 
   return (

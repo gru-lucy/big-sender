@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography, Box, Paper, LinearProgress, Stack, IconButton } from "@mui/material";
+import { Typography, Box, Paper, Stack, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { fileTypeColor } from "./fileTypeColors";
 import mime from "mime";
@@ -99,7 +99,11 @@ export const FileDisplayItem: React.FC<FileDisplayItemProps> = ({
         <Stack flex={1}>
           <Stack direction="row" justifyContent="space-between">
             <Stack>
-              <Typography variant="body1" sx={{ wordBreak: "break-all" }} fontWeight={600}>
+              <Typography
+                variant="body1"
+                sx={{ wordBreak: "break-all" }}
+                fontWeight={600}
+              >
                 {file.name}
               </Typography>
               <Typography variant="body2">

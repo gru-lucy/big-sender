@@ -11,6 +11,7 @@ export const Screen = () => {
     if (files.length) {
       router.push("/transfer");
     }
+    // eslint-disable-next-line
   }, [files]);
 
   return <InitialUpload />;
