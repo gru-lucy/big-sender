@@ -132,7 +132,7 @@ export const FileForm = () => {
                 gap={2}
               >
                 <FormControl fullWidth variant="outlined">
-                  <FormLabel>Receiver`&apos;s email</FormLabel>
+                  <FormLabel>Receiver&apos;s email</FormLabel>
                   <TextField
                     // name="receiverEmail"
                     placeholder="e.g., receiver@example.com"
@@ -144,7 +144,7 @@ export const FileForm = () => {
                   />
                 </FormControl>
                 <FormControl fullWidth variant="outlined">
-                  <FormLabel>Sender`&apos;s email</FormLabel>
+                  <FormLabel>Sender&apos;s email</FormLabel>
                   <TextField
                     placeholder="e.g., yourmail@example.com"
                     {...register("senderEmail")}
