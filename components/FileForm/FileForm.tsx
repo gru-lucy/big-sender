@@ -192,6 +192,7 @@ export const FileForm = () => {
       setTimeout(() => {
         router.push("/success");
       }, 1000);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       showToast(err.message ?? "Unexpected error");
