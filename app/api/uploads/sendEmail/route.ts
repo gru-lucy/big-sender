@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     fileKeys.forEach((key, index) => {
       linksHtml += `<li><a href="${downloadLinks[index]}">${key}</a></li>`;
     });
-    linksHtml += '</ul><br>';
+    linksHtml += '</ul>';
 
     const htmlContent = `
       <div style="background-color: #1c1c1c; color: #f0f0f0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">

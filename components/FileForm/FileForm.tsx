@@ -359,7 +359,7 @@ export const FileForm = () => {
             <CircularProgress
               variant="determinate"
               value={overallProgress}
-              size={100}
+              size={150}
               thickness={4.5}
               sx={{
                 color: '#198CD2',
