@@ -6,7 +6,8 @@ import { Resend } from "resend";
 
 export async function POST(request: NextRequest) {
   try {
-    const { senderEmail, receiverEmail, message, fileKeys } = await request.json();
+    const { senderEmail, receiverEmail, message, fileKeys } =
+      await request.json();
     if (!receiverEmail || !fileKeys || !Array.isArray(fileKeys)) {
       return NextResponse.json(
         { error: "Missing email or fileKeys" },
@@ -28,11 +29,12 @@ export async function POST(request: NextRequest) {
       downloadLinks.push(url);
     }
 
-    let linksHtml = '<ul  style="list-style-type: none; padding: 0; margin: 20px 0;">';
+    let linksHtml =
+      '<ul  style="list-style-type: none; padding: 0; margin: 20px 0;">';
     fileKeys.forEach((key, index) => {
       linksHtml += `<li><a href="${downloadLinks[index]}">${key}</a></li>`;
     });
-    linksHtml += '</ul>';
+    linksHtml += "</ul>";
 
     const htmlContent = `
       <div style="background-color: #1c1c1c; color: #f0f0f0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">
@@ -40,23 +42,25 @@ export async function POST(request: NextRequest) {
         <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
           We are delighted to inform you that a new file has been sent your way.
         </p>
-        ${senderEmail
-        ? `
+        ${
+          senderEmail
+            ? `
           <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
             <strong>${senderEmail}</strong> sent you a file. Please use the link below to securely download it:
           </p>
         `
-        : ""
-      }
+            : ""
+        }
         ${linksHtml}
-        ${message
-        ? `
+        ${
+          message
+            ? `
           <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
             Message from sender: ${message}
           </p>
         `
-        : ""
-      }
+            : ""
+        }
         <p style="font-size: 14px; line-height: 1.6; color: #bbb; margin: 20px 0;">
           Please note: The download link(s) provided above are only valid for 3 days from the time of sending. After this period, the links will expire and the file(s) will become inaccessible.
         </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -8,6 +9,7 @@ import {
   CircularProgress,
   FormControl,
   FormLabel,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -38,6 +40,10 @@ export const FileForm = () => {
   const totalBytesRef = useRef(0);
   const totalUploadedRef = useRef(0);
   const chunkProgressRef = useRef<{ [chunkId: string]: number }>({});
+  const [toast, setToast] = useState<{ open: boolean; msg: string }>({
+    open: false,
+    msg: "",
+  });
   const router = useRouter();
 
   const {
@@ -48,6 +54,8 @@ export const FileForm = () => {
   } = useForm<UploadFormData>({
     resolver: zodResolver(UploadFormSchema),
   });
+
+  const showToast = (msg: string) => setToast({ open: true, msg });
 
   const uploadSingleFile = async (
     file: File,
@@ -144,7 +152,10 @@ export const FileForm = () => {
   };
 
   const onSubmit = async (data: UploadFormData) => {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      showToast("Please select at least one file.");
+      return;
+    }
     setUploading(true);
     setOverallProgress(0);
 
@@ -183,6 +194,7 @@ export const FileForm = () => {
       }, 1000);
     } catch (err: any) {
       console.error(err);
+      showToast(err.message ?? "Unexpected error");
     } finally {
       setUploading(false);
     }
@@ -347,9 +359,9 @@ export const FileForm = () => {
               size={150}
               thickness={3}
               sx={{
-                color: 'rgba(255, 255, 255, 0.2)',
-                filter: 'blur(1px)',
-                position: 'absolute'
+                color: "rgba(255, 255, 255, 0.2)",
+                filter: "blur(1px)",
+                position: "absolute",
               }}
             />
 
@@ -360,9 +372,9 @@ export const FileForm = () => {
               size={150}
               thickness={3}
               sx={{
-                color: '#198CD2',
-                '& .MuiCircularProgress-circle': {
-                  strokeLinecap: 'round',
+                color: "#198CD2",
+                "& .MuiCircularProgress-circle": {
+                  strokeLinecap: "round",
                 },
               }}
             />
@@ -396,6 +408,17 @@ export const FileForm = () => {
           </Typography>
         </Stack>
       )}
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={() => setToast((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="error" variant="filled" sx={{ width: "100%" }}>
+          {toast.msg}
+        </Alert>
+      </Snackbar>
     </Card>
   );
 };
