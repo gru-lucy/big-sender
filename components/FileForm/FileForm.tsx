@@ -1,12 +1,15 @@
 "use client";
 
 import {
+  Alert,
+  Box,
   Button,
   Card,
   CardContent,
   CircularProgress,
   FormControl,
   FormLabel,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -21,8 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UploadFormSchema } from "./schema/uploadSchema";
 import { z } from "zod";
 import { useFileContext } from "@/context/FileContext";
-import { useEffect } from "react";
-import { sendDownloadEmail, uploadFiles } from "@/actions/upload";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const downloadedCount = 1;
@@ -33,6 +35,15 @@ type UploadFormData = z.infer<typeof UploadFormSchema>;
 
 export const FileForm = () => {
   const { files, setFiles } = useFileContext();
+  const [overallProgress, setOverallProgress] = useState<number>(0);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const totalBytesRef = useRef(0);
+  const totalUploadedRef = useRef(0);
+  const chunkProgressRef = useRef<{ [chunkId: string]: number }>({});
+  const [toast, setToast] = useState<{ open: boolean; msg: string }>({
+    open: false,
+    msg: "",
+  });
   const router = useRouter();
 
   const {
@@ -44,36 +55,154 @@ export const FileForm = () => {
     resolver: zodResolver(UploadFormSchema),
   });
 
+  const showToast = (msg: string) => setToast({ open: true, msg });
+
+  const uploadSingleFile = async (
+    file: File,
+    fileIndex: number,
+  ): Promise<string> => {
+    // 1. Initiate multipart upload on the server to get uploadId and key
+    const initiateRes = await fetch("/api/uploads/initiate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fileName: file.name, contentType: file.type }),
+    });
+    if (!initiateRes.ok) {
+      throw new Error(`Failed to initiate upload for ${file.name}`);
+    }
+    const { uploadId, key } = await initiateRes.json();
+
+    // 2. Calculate chunk size and total parts (using 10MB chunks here)
+    const partSize = 5 * 1024 * 1024; // 5 MB
+    const totalParts = Math.ceil(file.size / partSize);
+    const partsList: { PartNumber: number; ETag: string }[] = [];
+
+    // 3. Loop through each part of the file
+    for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+      const start = (partNumber - 1) * partSize;
+      const end = Math.min(start + partSize, file.size);
+      const blobPart = file.slice(start, end); // File chunk
+
+      // Request a presigned URL for this part from the server
+      const presignRes = await fetch("/api/uploads/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uploadId, key, partNumber }),
+      });
+      if (!presignRes.ok) {
+        throw new Error(
+          `Failed to get presigned URL for part ${partNumber} of ${file.name}`,
+        );
+      }
+      const { url: presignedUrl } = await presignRes.json();
+
+      // 4. Upload the file chunk directly to the presigned URL using XHR to track progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", presignedUrl);
+        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        // Update overall progress on each upload progress event
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const loaded = event.loaded;
+            const chunkId = `${fileIndex}-${partNumber}`; // Unique ID for this file chunk
+            const prevLoaded = chunkProgressRef.current[chunkId] || 0; // Bytes uploaded in previous event
+            chunkProgressRef.current[chunkId] = loaded;
+            totalUploadedRef.current += loaded - prevLoaded; // Increment global uploaded bytes
+            // Calculate overall percentage across all files
+            const percent = Math.round(
+              (totalUploadedRef.current / totalBytesRef.current) * 100,
+            );
+            setOverallProgress(percent);
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            // On success, retrieve the ETag from the response headers
+            const eTagHeader = xhr.getResponseHeader("ETag");
+            if (eTagHeader) {
+              partsList.push({ PartNumber: partNumber, ETag: eTagHeader });
+            }
+            resolve();
+          } else {
+            reject(
+              new Error(`Upload failed for part ${partNumber} of ${file.name}`),
+            );
+          }
+        };
+        xhr.onerror = () =>
+          reject(
+            new Error(
+              `Network error uploading part ${partNumber} of ${file.name}`,
+            ),
+          );
+        xhr.send(blobPart); // Start upload of the chunk
+      });
+    }
+
+    const completeRes = await fetch("/api/uploads/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uploadId, key, parts: partsList }),
+    });
+    if (!completeRes.ok) {
+      throw new Error(`Failed to complete upload for ${file.name}`);
+    }
+    return key; // Return the unique file key (to be used later for download link)
+  };
+
+  const onSubmit = async (data: UploadFormData) => {
+    if (!files || files.length === 0) {
+      showToast("Please select at least one file.");
+      return;
+    }
+    setUploading(true);
+    setOverallProgress(0);
+
+    // Initialize total bytes and progress trackers
+    totalBytesRef.current = Array.from(files).reduce(
+      (sum, f) => sum + f.size,
+      0,
+    );
+    totalUploadedRef.current = 0;
+    chunkProgressRef.current = {};
+
+    try {
+      // Upload all files concurrently
+      const fileKeys = await Promise.all(
+        Array.from(files).map((file, idx) => uploadSingleFile(file, idx)),
+      );
+      setOverallProgress(100); // ensure progress is 100% at completion
+
+      // 6. After uploads, call server to send download links via email
+      const emailRes = await fetch("/api/uploads/sendEmail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          receiverEmail: data.receiverEmail,
+          senderEmail: data.senderEmail,
+          message: data.message,
+          fileKeys,
+        }),
+      });
+      if (!emailRes.ok) {
+        throw new Error("Failed to send download links email.");
+      }
+      setFiles([]);
+      setTimeout(() => {
+        router.push("/success");
+      }, 1000);
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message ?? "Unexpected error");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   useEffect(() => {
     setValue("files", files);
   }, [files, setValue]);
-
-  const onSubmit = async (data: UploadFormData) => {
-    try {
-      // Make sure at least one file was selected
-      if (!data.files || data.files.length === 0) {
-        throw new Error("Please select file(s) to upload.");
-      }
-
-      // Convert FileList to an array of File objects
-      const filesArray = Array.from(data.files);
-
-      // Upload the files on the server using S3.send
-      const uploadedFiles = await uploadFiles(filesArray);
-      // Send an email containing presigned download links for each file
-      await sendDownloadEmail({
-        senderEmail: data.senderEmail,
-        receiverEmail: data.receiverEmail,
-        message: data.message,
-        files: uploadedFiles,
-      });
-      router.push("/success");
-    } catch (err) {
-      console.error("Error during upload:", err);
-    } finally {
-      setFiles([]);
-    }
-  };
 
   return (
     <Card sx={{ maxWidth: "768px" }}>
@@ -211,7 +340,7 @@ export const FileForm = () => {
         </CardContent>
       </form>
 
-      {isSubmitting && (
+      {uploading && (
         <Stack
           gap={2}
           justifyContent="center"
@@ -223,12 +352,73 @@ export const FileForm = () => {
           height="100vh"
           sx={{ backgroundColor: "rgba(0, 0, 0, 0.8)", zIndex: 9999 }}
         >
-          <CircularProgress />
-          <Typography variant="body1" color="gray">
-            Please wait while we are processing your files.
+          <Box sx={{ position: "relative", display: "inline-flex" }}>
+            <CircularProgress
+              variant="determinate"
+              value={100}
+              size={150}
+              thickness={3}
+              sx={{
+                color: "rgba(255, 255, 255, 0.2)",
+                filter: "blur(1px)",
+                position: "absolute",
+              }}
+            />
+
+            {/* Foreground Progress */}
+            <CircularProgress
+              variant="determinate"
+              value={overallProgress}
+              size={150}
+              thickness={3}
+              sx={{
+                color: "#198CD2",
+                "& .MuiCircularProgress-circle": {
+                  strokeLinecap: "round",
+                },
+              }}
+            />
+            <Box
+              sx={{
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                position: "absolute",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography
+                variant="caption"
+                component="div"
+                color="text.secondary"
+                fontSize={18}
+                sx={{
+                  color: "#FFF",
+                }}
+              >
+                {`${Math.round(overallProgress)}%`}
+              </Typography>
+            </Box>
+          </Box>
+          <Typography variant="body2" color="#FFF" mt={1}>
+            We are processing your files...
           </Typography>
         </Stack>
       )}
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={() => setToast((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="error" variant="filled" sx={{ width: "100%" }}>
+          {toast.msg}
+        </Alert>
+      </Snackbar>
     </Card>
   );
 };
