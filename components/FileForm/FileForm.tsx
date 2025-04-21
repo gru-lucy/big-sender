@@ -151,8 +151,6 @@ export const FileForm = () => {
     return key; // Return the unique file key (to be used later for download link)
   };
 
-  console.log(toast, "toast")
-
   const onSubmit = async (data: UploadFormData) => {
     if (!files || files.length === 0) {
       showToast("Please select at least one file.");
