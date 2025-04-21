@@ -10,10 +10,9 @@ export const UploadFormSchema = z.object({
 
   message: z.string().optional(),
 
-  files: z
-    .array(
-      z.instanceof(File).refine((file) => file.size > 0, {
-        message: "File is required",
-      }),
-    ),
+  files: z.array(
+    z.instanceof(File).refine((file) => file.size > 0, {
+      message: "File is required",
+    }),
+  ),
 });
