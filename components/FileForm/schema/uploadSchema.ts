@@ -15,6 +15,5 @@ export const UploadFormSchema = z.object({
       z.instanceof(File).refine((file) => file.size > 0, {
         message: "File is required",
       }),
-    )
-    .min(1, { message: "At least one file is required" }),
+    ),
 });
