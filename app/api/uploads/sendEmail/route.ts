@@ -23,10 +23,16 @@ export async function POST(request: NextRequest) {
       });
       // Each link will expire in 24 hours (86400 seconds)
       const url = await getSignedUrl(r2Client, getCommand, {
-        expiresIn: 86400,
+        expiresIn: 86400 * 3,
       });
       downloadLinks.push(url);
     }
+
+    let linksHtml = '<ul  style="list-style-type: none; padding: 0; margin: 20px 0;">';
+    fileKeys.forEach((key, index) => {
+      linksHtml += `<li><a href="${downloadLinks[index]}">${key}</a></li>`;
+    });
+    linksHtml += '</ul><br>';
 
     const htmlContent = `
       <div style="background-color: #1c1c1c; color: #f0f0f0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">
@@ -42,9 +48,7 @@ export async function POST(request: NextRequest) {
         `
         : ""
       }
-        <ul style="list-style-type: none; padding: 0; margin: 20px 0;">
-          ${fileKeys.forEach((key, index) => `<li><a href="${downloadLinks[index]}">${key}</a></li>`)}
-        </ul>
+        ${linksHtml}
         ${message
         ? `
           <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
         : ""
       }
         <p style="font-size: 14px; line-height: 1.6; color: #bbb; margin: 20px 0;">
-          Please note: The download link(s) provided above are only valid for 24 hours from the time of sending. After this period, the links will expire and the file(s) will become inaccessible.
+          Please note: The download link(s) provided above are only valid for 3 days from the time of sending. After this period, the links will expire and the file(s) will become inaccessible.
         </p>
         <p style="font-size: 14px; line-height: 1.6; color: #aaa; margin: 20px 0;">
           If you experience any issues or need further assistance with the download process, feel free to contact our support team anytime at <a href="mailto:support@example.com" style="color: #4aa8d8; text-decoration: none;">support@example.com</a>.
@@ -71,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     const resend = new Resend(process.env.NEXT_PUBLIC_RESEND_API_KEY || "");
     const emailData = {
-      from: "GigaSend <no-reply@transfer.gigasend.us>", // Verified sender
+      from: "GigaSend <no-reply@transfer.gigasend.us>",
       to: receiverEmail,
       subject: "Your files are ready for download",
       html: htmlContent,

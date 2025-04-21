@@ -51,7 +51,7 @@ export const Success = () => {
               },
             }}
           >
-            Email sent! The recipient has 7 days to download your files.
+            Email sent! The recipient has 3 days to download your files.
           </Typography>
           <Button
             variant="contained"

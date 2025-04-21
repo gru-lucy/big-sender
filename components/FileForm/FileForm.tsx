@@ -398,35 +398,6 @@ export const FileForm = () => {
           </Typography>
         </Stack>
       )}
-      {finalizing && (
-        <Stack
-          gap={2}
-          justifyContent="center"
-          alignItems="center"
-          position="fixed"
-          width="100vw"
-          top={0}
-          left={0}
-          height="100vh"
-          sx={{ backgroundColor: "rgba(0, 0, 0, 0.8)", zIndex: 9999 }}
-        >
-          <CircularProgress
-            variant="determinate"
-            value={overallProgress}
-            size={100}
-            thickness={4.5}
-            sx={{
-              color: '#198CD2',
-              '& .MuiCircularProgress-circle': {
-                strokeLinecap: 'round',
-              },
-            }}
-          />
-          <Typography color="white" fontWeight="bold">
-            Sending download email...
-          </Typography>
-        </Stack>
-      )}
     </Card>
   );
 };
