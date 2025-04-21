@@ -35,7 +35,6 @@ export const FileForm = () => {
   const { files, setFiles } = useFileContext();
   const [overallProgress, setOverallProgress] = useState<number>(0);
   const [uploading, setUploading] = useState<boolean>(false);
-  const [finalizing, setFinalizing] = useState(false);
   const totalBytesRef = useRef(0);
   const totalUploadedRef = useRef(0);
   const chunkProgressRef = useRef<{ [chunkId: string]: number }>({});
@@ -179,7 +178,6 @@ export const FileForm = () => {
         throw new Error("Failed to send download links email.");
       }
       setFiles([]);
-      setFinalizing(true);
       setTimeout(() => {
         router.push("/success");
       }, 1000);
