@@ -180,7 +180,7 @@ export const FileForm = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           receiverEmail: data.receiverEmail,
-          senderEmail: data.receiverEmail,
+          senderEmail: data.senderEmail,
           message: data.message,
           fileKeys,
         }),
