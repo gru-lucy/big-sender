@@ -346,8 +346,8 @@ export const FileForm = () => {
             <CircularProgress
               variant="determinate"
               value={100}
-              size={100}
-              thickness={4.5}
+              size={150}
+              thickness={3}
               sx={{
                 color: 'rgba(255, 255, 255, 0.2)',
                 filter: 'blur(1px)',
@@ -360,7 +360,7 @@ export const FileForm = () => {
               variant="determinate"
               value={overallProgress}
               size={150}
-              thickness={4.5}
+              thickness={3}
               sx={{
                 color: '#198CD2',
                 '& .MuiCircularProgress-circle': {
