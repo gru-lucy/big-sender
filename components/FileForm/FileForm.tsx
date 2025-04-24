@@ -219,7 +219,7 @@ export const FileForm = () => {
               alignItems: "center",
             }}
           >
-            <Image src="./logo.svg" alt="logo" width={140} height={30} />
+            <Image src="/logo.png" alt="logo" width={168} height={36} />
           </Stack>
 
           <Stack
