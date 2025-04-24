@@ -11,9 +11,9 @@ const interSans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BigSender",
+  title: "GigaSend",
   description:
-    "BigSender lets you send and share large files up to 50GB quickly and securely. Share via email, direct link, or social platforms with ease.",
+    "GigaSend lets you send and share large files up to 50GB quickly and securely. Share via email, direct link, or social platforms with ease.",
 };
 
 export default function RootLayout({
